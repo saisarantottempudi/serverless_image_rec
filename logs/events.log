@@ -1,0 +1,26 @@
+[2025-10-06 22:55:04 UTC] 🪶 Trigger received for: gs://local-bucket/sample_images/cat.jpg
+[2025-10-06 22:55:05 UTC] ⚠️  GCS access forbidden (billing disabled or bucket missing). Using local fallback.
+[2025-10-06 22:56:17 UTC] 🪶 Trigger received for: gs://local-bucket/sample_images/cat.jpg
+[2025-10-06 22:56:17 UTC] ⚠️  GCS access forbidden (billing disabled or bucket missing). Using local fallback.
+[2025-10-06 22:56:18 UTC] 🧠 Classification complete: class_426
+[2025-10-06 22:56:18 UTC] 💬 Caption generated: Image of class_426.
+[2025-10-06 22:56:18 UTC] Saved JSON → results/cat.jpg.json
+[2025-10-06 22:56:18 UTC] 📦 Results saved to → results/cat.jpg.json
+[2025-10-06 23:05:59 UTC] 🪶 Trigger received for: gs://local-bucket/sample_images/cat.jpg
+[2025-10-06 23:06:00 UTC] ⚠️  GCS access forbidden (billing disabled or bucket missing). Using local fallback.
+[2025-10-06 23:06:00 UTC] 🧠 Classification complete: class_426
+[2025-10-06 23:06:00 UTC] 💬 Caption generated: Image of class_426.
+[2025-10-06 23:06:00 UTC] Saved JSON → results/cat.jpg.json
+[2025-10-06 23:06:00 UTC] 📦 Results saved to → results/cat.jpg.json
+[2025-10-06 23:07:08 UTC] 🪶 Trigger received for: gs://local-bucket/sample_images/cat.jpg
+[2025-10-06 23:07:09 UTC] ⚠️  GCS access forbidden (billing disabled or bucket missing). Using local fallback.
+[2025-10-06 23:07:09 UTC] 🧠 Classification complete: class_426
+[2025-10-06 23:07:09 UTC] 💬 Caption generated: Image of class_426.
+[2025-10-06 23:07:09 UTC] Saved JSON → results/cat.jpg.json
+[2025-10-06 23:07:09 UTC] 📦 Results saved to → results/cat.jpg.json
+[2025-10-06 23:18:07 UTC] 🪶 Trigger received for: gs://local-bucket/sample_images/cat.jpg
+[2025-10-06 23:18:07 UTC] ⚠️  GCS access forbidden (billing disabled or bucket missing). Using local fallback.
+[2025-10-06 23:18:07 UTC] 🧠 Classification complete: class_426
+[2025-10-06 23:18:09 UTC] 💬 Caption generated: "Classy vibes only, darling! 💁‍♀️✨ #ClassyAF"
+[2025-10-06 23:18:09 UTC] Saved JSON → results/cat.jpg.json
+[2025-10-06 23:18:09 UTC] 📦 Results saved to → results/cat.jpg.json

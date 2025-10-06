@@ -2,19 +2,23 @@
 caption.py
 -----------
 Generates short contextual captions for images
-using OpenAI's GPT models.
+using OpenAI's Chat Completions API.
 """
 
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
 
-# Create a single reusable client (uses env variable OPENAI_API_KEY)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+# Load environment variables
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_caption(label: str) -> str:
     """
     Given a classified image label, generate a short
-    descriptive caption using OpenAI.
+    descriptive caption using OpenAI GPT model.
     """
     if not label:
         return "No label provided."
@@ -34,6 +38,7 @@ def generate_caption(label: str) -> str:
             temperature=0.8,
             max_tokens=50,
         )
+
         return response.choices[0].message.content.strip()
 
     except Exception as e:

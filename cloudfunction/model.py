@@ -1,21 +1,22 @@
 """
 model.py
---------
-Lightweight TensorFlow Lite image classification module.
-Loads a .tflite model and runs inference on uploaded images.
+---------
+Handles image classification using a TensorFlow Lite model.
 """
 
 import numpy as np
-from PIL import Image
 import tensorflow as tf
+from PIL import Image
 import os
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "mobilenet_v2_1.0_224.tflite")
-LABELS_PATH = os.path.join(os.path.dirname(__file__), "models", "labels.txt")
 
 class ImageClassifier:
     def __init__(self):
-        # Load TFLite model and allocate tensors
+        # Path to the TFLite model
+        MODEL_PATH = os.path.join(
+            os.path.dirname(__file__), "models", "mobilenet_v2_1.0_224.tflite"
+        )
+
         print(f"🔍 Loading TFLite model from {MODEL_PATH}")
         self.interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
         self.interpreter.allocate_tensors()
@@ -23,48 +24,37 @@ class ImageClassifier:
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
 
-        # Detect input data type (float or uint8)
-        self.input_type = self.input_details[0]["dtype"]
-        print(f"[INFO] Model input type: {self.input_type}")
-
-        # Load labels
-        if os.path.exists(LABELS_PATH):
-            with open(LABELS_PATH, "r") as f:
-                self.labels = [line.strip() for line in f.readlines()]
-        else:
-            self.labels = [f"class_{i}" for i in range(1000)]  # fallback
+        input_dtype = self.input_details[0]["dtype"]
+        print(f"[INFO] Model input type: {input_dtype}")
 
     def preprocess(self, image_path):
-        """Preprocess an image for model input."""
+        """Load and preprocess image for model inference."""
         img = Image.open(image_path).convert("RGB").resize((224, 224))
-        img = np.array(img)
+        img_array = np.array(img, dtype=np.float32)
+        img_array = np.expand_dims(img_array, axis=0)
 
-        if self.input_type == np.float32:
-            img = img / 255.0
-            img = np.expand_dims(img.astype(np.float32), axis=0)
+        # Adjust dtype if needed
+        if self.input_details[0]["dtype"] == np.uint8:
+            img_array = (img_array / 255.0 * 255).astype(np.uint8)
         else:
-            img = np.expand_dims(img.astype(np.uint8), axis=0)
+            img_array = img_array / 255.0
 
-        return img
+        return img_array
 
-    def predict_topk(self, image_path, k=5):
-        """Return top-k predictions with confidence scores."""
-        input_tensor = self.preprocess(image_path)
-        self.interpreter.set_tensor(self.input_details[0]["index"], input_tensor)
+    def predict(self, image_path):
+        """Run inference on a given image."""
+        x = self.preprocess(image_path)
+        self.interpreter.set_tensor(self.input_details[0]["index"], x)
         self.interpreter.invoke()
-        output_data = self.interpreter.get_tensor(self.output_details[0]["index"])[0]
+        output = self.interpreter.get_tensor(self.output_details[0]["index"])
 
-        # Convert probabilities
-        if self.output_details[0]["dtype"] == np.uint8:
-            scale, zero_point = self.output_details[0]["quantization"]
-            output_data = scale * (output_data - zero_point)
+        # Get top-5 predictions
+        top_indices = np.argsort(output[0])[::-1][:5]
+        top_confidences = output[0][top_indices]
 
-        top_k_indices = np.argsort(output_data)[::-1][:k]
-        results = [
-            {
-                "label": self.labels[i] if i < len(self.labels) else f"class_{i}",
-                "confidence": float(output_data[i] * 100),
-            }
-            for i in top_k_indices
-        ]
-        return results
+        print("\nTop-5 Predictions:")
+        for i, (idx, conf) in enumerate(zip(top_indices, top_confidences)):
+            print(f"  class_{idx:<3d} — {conf*100:.2f}%")
+
+        top_label = f"class_{top_indices[0]}"
+        return top_label
