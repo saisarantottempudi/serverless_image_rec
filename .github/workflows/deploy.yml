@@ -1,0 +1,48 @@
+name: Deploy to Google Cloud Functions Gen2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'beta'
+
+      # --- Option 1 : Recommended – Workload Identity Federation  ---
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # --- Option 2 : (If not using WIF) Service-Account Key JSON ---
+      # - name: Authenticate with Service Account key
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Deploy Cloud Function
+        run: |
+          gcloud functions deploy image-reco-fn \
+            --gen2 \
+            --region=${{ secrets.GCP_REGION }} \
+            --runtime=python311 \
+            --entry-point=gcs_trigger \
+            --source=cloudfunction \
+            --memory=1024MB \
+            --timeout=60s \
+            --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" \
+            --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" \
+            --set-env-vars="PROJECT_ID=${{ secrets.GCP_PROJECT }},VERTEX_REGION=${{ secrets.VERTEX_REGION }},USE_VERTEX=${{ secrets.USE_VERTEX }},OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}"
