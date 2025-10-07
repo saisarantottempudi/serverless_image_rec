@@ -24,9 +24,7 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          # 👇 Your provider resource name (from GCP)
           workload_identity_provider: projects/126702752655/locations/global/workloadIdentityPools/github-pool/providers/github
-          # 👇 Your GCP service account email
           service_account: serverless-image-api@gaia-automation-2.iam.gserviceaccount.com
 
       # 3️⃣ Setup gcloud CLI
@@ -43,12 +41,22 @@ jobs:
           echo "📍 Project config:"
           gcloud config list
 
-      # 5️⃣ Deploy Cloud Function
+      # 5️⃣ Enable required APIs (failsafe)
+      - name: 🔧 Enable Required APIs
+        run: |
+          gcloud services enable cloudfunctions.googleapis.com \
+            run.googleapis.com \
+            eventarc.googleapis.com \
+            artifactregistry.googleapis.com \
+            cloudbuild.googleapis.com \
+            iam.googleapis.com \
+            storage.googleapis.com
+
+      # 6️⃣ Deploy Cloud Function (cleaned syntax)
       - name: 🚀 Deploy Cloud Function
         run: |
           echo "🚀 Starting deployment..."
-          gcloud functions deploy image-reco-fn \
-            --gen2 \
+          gcloud functions deploy image-reco-fn --gen2 \
             --region=${{ secrets.GCP_REGION }} \
             --runtime=python311 \
             --entry-point=gcs_trigger \
