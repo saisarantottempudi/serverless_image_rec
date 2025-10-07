@@ -15,32 +15,38 @@ jobs:
       id-token: write
 
     steps:
+      # 1️⃣ Checkout code
       - name: 🧩 Checkout source
         uses: actions/checkout@v4
 
-      # ✅ Authenticate to Google Cloud
+      # 2️⃣ Authenticate via Workload Identity Federation
       - name: 🔐 Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          # 👇 Your provider resource name (from GCP)
+          workload_identity_provider: projects/126702752655/locations/global/workloadIdentityPools/github-pool/providers/github
+          # 👇 Your GCP service account email
+          service_account: serverless-image-api@gaia-automation-2.iam.gserviceaccount.com
 
-      # ✅ Install gcloud CLI
+      # 3️⃣ Setup gcloud CLI
       - name: ⚙️ Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: 'beta'
 
-      # ✅ Verify authentication
+      # 4️⃣ Verify Authentication
       - name: ✅ Verify GCP Authentication
         run: |
+          echo "🧠 Active account:"
           gcloud auth list
+          echo "📍 Project config:"
           gcloud config list
 
-      # 🚀 Deploy to Cloud Functions Gen2
+      # 5️⃣ Deploy Cloud Function
       - name: 🚀 Deploy Cloud Function
         run: |
+          echo "🚀 Starting deployment..."
           gcloud functions deploy image-reco-fn \
             --gen2 \
             --region=${{ secrets.GCP_REGION }} \
