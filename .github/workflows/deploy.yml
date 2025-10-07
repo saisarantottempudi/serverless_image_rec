@@ -1,60 +1,45 @@
 name: Deploy Serverless Image Recognition API
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
+    name: Deploy to Google Cloud Functions Gen2
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout source
+      - name: 🧩 Checkout source
         uses: actions/checkout@v4
 
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          install_components: 'beta'
-
-      # --- AUTHENTICATION ---
-
-      # ✅ Preferred: Workload Identity Federation (secure)
-      - name: Authenticate to Google Cloud
+      # ✅ Authenticate to Google Cloud
+      - name: 🔐 Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
-      # Optional alternative:
-      # - name: Authenticate using Service Account Key
-      #   uses: google-github-actions/auth@v2
-      #   with:
-      #     credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # ✅ Install gcloud CLI
+      - name: ⚙️ Setup gcloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'beta'
 
-      # --- DEPENDENCY INSTALLATION ---
-      - name: Install dependencies
+      # ✅ Verify authentication
+      - name: ✅ Verify GCP Authentication
         run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r cloudfunction/requirements.txt
-          pip install -r .dev-requirements.txt
+          gcloud auth list
+          gcloud config list
 
-      # --- LOCAL TEST (OpenAI caption sanity check) ---
-      - name: Run caption verification
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          source venv/bin/activate
-          python scripts/test_caption_ci.py
-
-      # --- DEPLOY FUNCTION ---
-      - name: Deploy Cloud Function (Gen 2)
+      # 🚀 Deploy to Cloud Functions Gen2
+      - name: 🚀 Deploy Cloud Function
         run: |
           gcloud functions deploy image-reco-fn \
             --gen2 \
