@@ -1,3 +1,3 @@
 .venv/
 .env
-gcp-creds.json
+gcp-creds.json.DS_Store
