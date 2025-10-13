@@ -8,37 +8,62 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Google Cloud Functions Gen2
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout source
+      # 1️⃣ Checkout code
+      - name: 🧩 Checkout source
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
+      # 2️⃣ Authenticate via Workload Identity Federation
+      - name: 🔐 Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/126702752655/locations/global/workloadIdentityPools/github-pool/providers/github
           service_account: serverless-image-api@gaia-automation-2.iam.gserviceaccount.com
 
-      - name: Set up gcloud SDK
+      # 3️⃣ Setup gcloud CLI
+      - name: ⚙️ Setup gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: 'beta'
 
-      - name: Enable required APIs (safe)
+      # 4️⃣ Verify GCP Authentication
+      - name: ✅ Verify GCP Authentication
         run: |
-          gcloud services enable cloudfunctions.googleapis.com run.googleapis.com eventarc.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com iam.googleapis.com storage.googleapis.com
-
-      - name: Verify GCP Authentication
-        run: |
+          echo "🧠 Active account:"
           gcloud auth list
+          echo "📍 Project config:"
           gcloud config list
 
+      # 5️⃣ Enable Required APIs (Failsafe)
+      - name: 🔧 Enable Required APIs
+        run: |
+          gcloud services enable cloudfunctions.googleapis.com \
+            run.googleapis.com \
+            eventarc.googleapis.com \
+            artifactregistry.googleapis.com \
+            cloudbuild.googleapis.com \
+            iam.googleapis.com \
+            storage.googleapis.com
+
+      # 6️⃣ Deploy Cloud Function (runtime preserved)
       - name: 🚀 Deploy Cloud Function
         run: |
           echo "🚀 Starting deployment..."
-          gcloud functions deploy image-reco-fn --gen2 --region=${{ secrets.GCP_REGION }} --runtime=python311 --entry-point=gcs_trigger --source=cloudfunction --memory=1024MB --timeout=60s --trigger-event-filters="type=google.cloud.storage.object.v1.finalized" --trigger-event-filters="bucket=${{ secrets.GCS_BUCKET }}" --set-env-vars="PROJECT_ID=${{ secrets.GCP_PROJECT }},VERTEX_REGION=${{ secrets.VERTEX_REGION }},USE_VERTEX=${{ secrets.USE_VERTEX }},OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}"
+          bash -c "gcloud functions deploy image-reco-fn \
+            --gen2 \
+            --region=${{ secrets.GCP_REGION }} \
+            --runtime=python311 \
+            --entry-point=gcs_trigger \
+            --source=cloudfunction \
+            --memory=1024MB \
+            --timeout=60s \
+            --trigger-event-filters=type=google.cloud.storage.object.v1.finalized \
+            --trigger-event-filters=bucket=${{ secrets.GCS_BUCKET }} \
+            --set-env-vars=PROJECT_ID=${{ secrets.GCP_PROJECT }},VERTEX_REGION=${{ secrets.VERTEX_REGION }},USE_VERTEX=${{ secrets.USE_VERTEX }},OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},OPENAI_MODEL=${{ secrets.OPENAI_MODEL }}"
